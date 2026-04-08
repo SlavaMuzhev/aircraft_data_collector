@@ -8,13 +8,14 @@ class APIAdapter(BaseApiAdapter):
     и информации о самолетах, находящихся в воздушном пространстве этих стран.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, country) -> None:
         self.__openstreetmap_url = 'https://nominatim.openstreetmap.org/search'
         self.__opensky_url = 'https://opensky-network.org/api/states/all?'
         self.aeroplanes = None
         self.coordinate = None
+        self.country = country
 
-    def get_coordinate(self, country: str) -> None:
+    def get_coordinate(self) -> None:
         """Метод для подключенияя к API и получения географических координат стран"""
         #Headers с user-agent - обязательный параметр при запросе к nominatim.openstreetmap.
         #Вы можете использовать любое название вместо test-app/1.0, например просто test-app.
@@ -24,7 +25,7 @@ class APIAdapter(BaseApiAdapter):
 
         #Указываем параметры: в каком формате возвращать данные и максимальную длину списка стран в ответе.
         params_nominatim = {
-            'country': country,
+            'country': self.country,
             'format': 'json',
             'limit': 1,
         }
@@ -59,7 +60,9 @@ class APIAdapter(BaseApiAdapter):
             print(f"Ошибка OpenSky: {response.status_code}")
 
 
-api = APIAdapter()
-api.get_coordinate('Canada')
+
+
+api = APIAdapter("Canada")
+api.get_coordinate()
 api.get_airplanes()
 
