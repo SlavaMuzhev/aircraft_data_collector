@@ -4,37 +4,39 @@ from src.base_file_connect import BaseFileConnect
 
 
 class ConnectJson(BaseFileConnect):
-    def __init__(self, filename: str):
-        self.file_path = os.path.join('data', filename)
-
+    def __init__(self, filename: str = "airplanes.json"):
+        self.__file_path = os.path.join('data', filename)
         os.makedirs('data', exist_ok=True)
-
-        if not os.path.exists(self.file_path):
-            with open(self.file_path, 'w', encoding='utf-8') as f:
-                json.dump([], f)
+        if not os.path.exists(self.__file_path):
+            self._write_all([])
 
     def _read_all(self) -> list:
         """Метод для чтения данных"""
         try:
-            with open(self.file_path, 'r', encoding='utf-8') as f:
+            with open(self.__file_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return []
 
     def _write_all(self, data: list):
         """Метод для записи данных"""
-        with open(self.file_path, 'w', encoding='utf-8') as f:
+        with open(self.__file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
     def add_data(self, aeroplane_data: dict):
         """Добавление данных о самолете в файл"""
         all_data = self._read_all()
+
+        if any(item.get('callsign') == aeroplane_data.get('callsign') for item in all_data):
+            print(f"Самолет {aeroplane_data.get('callsign')} уже есть в базе.")
+            return
+
         all_data.append(aeroplane_data)
         self._write_all(all_data)
-        print(f"Запись о {aeroplane_data.get('callsign')} добавлена в {self.file_path}")
+        print(f"Запись о {aeroplane_data.get('callsign')} добавлена.")
 
     def get_data(self, criteria: dict) -> list:
-        """Поиск данных по критериям"""
+        """Поиск данных по критериям (реализован в классе-наследнике)"""
         all_data = self._read_all()
         return [
             item for item in all_data
@@ -42,10 +44,11 @@ class ConnectJson(BaseFileConnect):
         ]
 
     def remove_data(self, criteria: dict):
-        """Удаление записей по критериям"""
+        """Удаление записей по критериям (реализован в классе-наследнике)"""
         all_data = self._read_all()
         new_data = [
             item for item in all_data
             if not all(item.get(k) == v for k, v in criteria.items())
         ]
+
         self._write_all(new_data)

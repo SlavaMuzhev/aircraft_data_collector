@@ -34,13 +34,15 @@ def user_interaction():
 
             if api.coordinate:
                 api.get_airplanes()
-                if api.aeroplanes and api.aeroplanes.get('states'):
-                    for state in api.aeroplanes['states']:
+                states = api.aeroplanes.get('states') if api.aeroplanes else None
+
+                if states:
+                    for state in states:
                         plane = Aeroplane(state)
                         connector.add_data(plane.to_dict())
-                    print(f"Успешно загружено {len(api.aeroplanes['states'])} самолетов.")
+                    print(f"Успешно обработано {len(states)} самолетов.")
                 else:
-                    print("В этой области сейчас нет самолетов.")
+                    print("В этой области сейчас нет активных самолетов.")
 
         elif choice == "2":
             try:
@@ -63,7 +65,6 @@ def user_interaction():
 
             print(f"\n--- ТОП {len(top_planes)} по высоте ---")
             for i, p in enumerate(top_planes, 1):
-                # Достаем данные из словаря p
                 callsign = p.get('callsign', 'Unknown')
                 height = p.get('height', 0)
                 country = p.get('country', 'Unknown')
