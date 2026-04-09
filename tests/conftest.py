@@ -2,6 +2,7 @@ import pytest
 import os
 from src.aeroplane import Aeroplane
 from src.connect_json import ConnectJson
+from src.api import APIAdapter
 
 
 @pytest.fixture
@@ -24,3 +25,8 @@ def temp_db():
     path = os.path.join('data', test_file)
     if os.path.exists(path):
         os.remove(path)
+
+@pytest.fixture
+def api_adapter():
+    """Создает экземпляр APIAdapter для каждого теста"""
+    return APIAdapter("Canada")

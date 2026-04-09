@@ -1,4 +1,6 @@
 from unittest.mock import patch, MagicMock
+from requests import exceptions
+from requests.exceptions import RequestException
 from src.api import APIAdapter
 
 
@@ -58,9 +60,44 @@ def test_get_airplanes_success(mock_get):
     assert len(api.aeroplanes['states']) == 1
     assert api.aeroplanes['states'][0][1] == 'FLIGHT1'
 
-#
+
 def test_get_airplanes_no_coordinates():
     """Тестируем ошибку, если координаты еще не получены"""
     api = APIAdapter("Canada")
     api.get_airplanes()
     assert api.aeroplanes is None
+
+
+@patch('src.api.get')
+def test_get_coordinate_network_error(mock_get, api_adapter):
+    """Тест ошибки сети при запросе координат"""
+    mock_get.side_effect = exceptions.RequestException("Network fail")
+    api_adapter.get_coordinate()
+    assert api_adapter.coordinate is None
+
+
+@patch('src.api.get')
+def test_get_airplanes_http_error(mock_get, api_adapter):
+    """Тест HTTP ошибки (например, 500) от OpenSky"""
+    api_adapter.coordinate = [40, 50, -100, -90]
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+    mock_response.text = "Internal Server Error"
+    mock_get.return_value = mock_response
+
+    api_adapter.get_airplanes()
+    assert api_adapter.aeroplanes is None
+
+@patch('src.api.get')
+def test_get_coordinate_exception(mock_get, api_adapter):
+    """Имитируем отсутствие интернета"""
+    mock_get.side_effect = RequestException("No internet")
+    api_adapter.get_coordinate()
+    assert api_adapter.coordinate is None
+
+@patch('src.api.get')
+def test_get_airplanes_error_status(mock_get, api_adapter):
+    """Имитируем ошибку сервера 500"""
+    api_adapter.coordinate = [0,0,0,0]
+    mock_get.return_value.status_code = 500
+    api_adapter.get_airplanes()
