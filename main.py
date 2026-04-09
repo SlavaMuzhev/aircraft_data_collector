@@ -37,7 +37,7 @@ def user_interaction():
                 if api.aeroplanes and api.aeroplanes.get('states'):
                     for state in api.aeroplanes['states']:
                         plane = Aeroplane(state)
-                        connector.add_data(plane.__dict__)
+                        connector.add_data(plane.to_dict())
                     print(f"Успешно загружено {len(api.aeroplanes['states'])} самолетов.")
                 else:
                     print("В этой области сейчас нет самолетов.")
