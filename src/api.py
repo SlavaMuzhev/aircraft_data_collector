@@ -1,4 +1,4 @@
-from requests import get
+from requests import get, RequestException
 from src.base_api_adapter import BaseApiAdapter
 
 
@@ -8,7 +8,7 @@ class APIAdapter(BaseApiAdapter):
     и информации о самолетах, находящихся в воздушном пространстве этих стран.
     """
 
-    def __init__(self, country) -> None:
+    def __init__(self, country: str) -> None:
         self.__openstreetmap_url = 'https://nominatim.openstreetmap.org/search'
         self.__opensky_url = 'https://opensky-network.org/api/states/all?'
         self.aeroplanes = None
@@ -30,20 +30,29 @@ class APIAdapter(BaseApiAdapter):
             'limit': 1,
         }
 
-        response = get(url=self.__openstreetmap_url, params=params_nominatim, headers=headers_nominatim)
+        try:
+            response = get(url=self.__openstreetmap_url, params=params_nominatim, headers=headers_nominatim, timeout=10)
+            response.raise_for_status()
 
-        response.raise_for_status()
-        print(f"OSM Status: {response.status_code}")
+            data = response.json()
+            if not data:
+                print(f"Ошибка: Страна '{self.country}' не найдена в OSM.")
+                return
 
-        data = response.json()
+            self.coordinate = [float(x) for x in data[0].get('boundingbox')]
+            print(f"Координаты {self.country} получены: {self.coordinate}")
 
-        if data:
-            self.coordinate = data[0].get('boundingbox')
+        except RequestException as e:
+            print(f"Ошибка сети при запросе к OSM: {e}")
+        except (ValueError, IndexError) as e:
+            print(f"Ошибка обработки данных OSM: {e}")
 
 
     def get_airplanes(self) -> None:
         """Метод для получения информации о самолетах, находящихся в воздушном пространстве страны"""
-
+        if not self.coordinate:
+            print("Ошибка: Нельзя получить самолеты без координат страны.")
+            return
         #Параметры для фильтрации самолетов по их географическим координатам.
         params = {
             'lamin': self.coordinate[0],
@@ -52,17 +61,20 @@ class APIAdapter(BaseApiAdapter):
             'lomax': self.coordinate[3],
         }
 
-        response = get(url=self.__opensky_url, params=params)
-        if response.status_code == 200:
-            self.aeroplanes = response.json()
-            print("Данные о самолетах успешно получены")
-        else:
-            print(f"Ошибка OpenSky: {response.status_code}")
+        try:
+            response = get(url=self.__opensky_url, params=params, timeout=15)
 
+            if response.status_code == 200:
+                self.aeroplanes = response.json()
+                # Проверяем, есть ли поле 'states' (список самолетов)
+                flights_count = len(self.aeroplanes.get('states') or [])
+                print(f"Данные получены. Найдено самолетов: {flights_count}")
+            elif response.status_code == 404:
+                print("OpenSky: В указанной области сейчас нет активных самолетов.")
+            else:
+                print(f"Ошибка OpenSky (Статус {response.status_code}): {response.text}")
 
+        except RequestException as e:
+            print(f"Ошибка сети при запросе к OpenSky: {e}")
 
-
-api = APIAdapter("Canada")
-api.get_coordinate()
-api.get_airplanes()
 
