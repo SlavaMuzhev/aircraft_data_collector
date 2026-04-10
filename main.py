@@ -1,9 +1,9 @@
-from src.api import APIAdapter
 from src.aeroplane import Aeroplane
+from src.api import APIAdapter
 from src.connect_json import ConnectJson
 
 
-def user_interaction():
+def user_interaction() -> None:
     """
     Функция для взаимодействия с пользователем через консоль.
     Возможности функции:
@@ -34,7 +34,7 @@ def user_interaction():
 
             if api.coordinate:
                 api.get_airplanes()
-                states = api.aeroplanes.get('states') if api.aeroplanes else None
+                states = api.aeroplanes.get("states") if api.aeroplanes else None
 
                 if states:
                     for state in states:
@@ -58,21 +58,19 @@ def user_interaction():
                 continue
 
             top_planes = sorted(
-                all_planes_data,
-                key=lambda x: x.get('height', 0) if x.get('height') is not None else 0,
-                reverse=True
+                all_planes_data, key=lambda x: x.get("height", 0) if x.get("height") is not None else 0, reverse=True
             )[:n]
 
             print(f"\n--- ТОП {len(top_planes)} по высоте ---")
             for i, p in enumerate(top_planes, 1):
-                callsign = p.get('callsign', 'Unknown')
-                height = p.get('height', 0)
-                country = p.get('country', 'Unknown')
+                callsign = p.get("callsign", "Unknown")
+                height = p.get("height", 0)
+                country = p.get("country", "Unknown")
                 print(f"{i}. {callsign} | Высота: {height} м | Страна: {country}")
 
         elif choice == "3":
             reg_country = input("Введите страну регистрации (например, United States): ")
-            results = connector.get_data({'country': reg_country})
+            results = connector.get_data({"country": reg_country})
 
             if results:
                 for p in results:
@@ -82,7 +80,7 @@ def user_interaction():
 
         elif choice == "4":
             confirm = input("Вы уверены, что хотите очистить файл? (y/n): ")
-            if confirm.lower() == 'y':
+            if confirm.lower() == "y":
                 connector._write_all([])
                 print("Данные удалены.")
 

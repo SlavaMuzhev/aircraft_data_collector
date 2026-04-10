@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-import requests
+from typing import Any, Dict, Optional
 
+import requests
 
 
 class BaseApiAdapter(ABC):
@@ -11,14 +12,16 @@ class BaseApiAdapter(ABC):
     """
 
     @abstractmethod
-    def get_coordinate(self, country: str):
+    def get_coordinate(self, country: str) -> None:
         pass
 
     @abstractmethod
-    def get_airplanes(self):
+    def get_airplanes(self) -> None:
         pass
 
-    def _connect(self, url, params=None, headers=None):
+    def _connect(
+        self, url: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, Any]] = None
+    ) -> requests.Response:
         """
         Реализованный метод подключения.
         Критерий: отправляет запрос на URL и проверяет статус-код.
@@ -26,4 +29,3 @@ class BaseApiAdapter(ABC):
         response = requests.get(url, params=params, headers=headers, timeout=10)
         response.raise_for_status()  # Выбросит ошибку, если статус не 200-299
         return response
-

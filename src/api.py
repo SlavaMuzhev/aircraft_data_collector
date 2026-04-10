@@ -1,4 +1,7 @@
-from requests import get, RequestException
+from typing import Any, Dict, List, Optional
+
+from requests import RequestException
+
 from src.base_api_adapter import BaseApiAdapter
 
 
@@ -10,31 +13,30 @@ class APIAdapter(BaseApiAdapter):
 
     def __init__(self, country: str) -> None:
         super().__init__()
-        self.__openstreetmap_url = 'https://nominatim.openstreetmap.org/search'
-        self.__opensky_url = 'https://opensky-network.org/api/states/all?'
+        self.__openstreetmap_url = "https://nominatim.openstreetmap.org/search"
+        self.__opensky_url = "https://opensky-network.org/api/states/all?"
         self.__country = country
-        self.__coordinate = None
-        self.__aeroplanes = None
+        self.__coordinate: Optional[List[float]] = None
+        self.__aeroplanes: Optional[Dict[str, Any]] = None
 
-
-    def get_coordinate(self) -> None:
+    def get_coordinate(self, country: Optional[str] = None) -> None:
         """Метод для подключенияя к API и получения географических координат стран"""
-        #Headers с user-agent - обязательный параметр при запросе к nominatim.openstreetmap.
-        #Вы можете использовать любое название вместо test-app/1.0, например просто test-app.
-        headers_nominatim = {'User-Agent': 'test-app/1.0'}
+        # Headers с user-agent - обязательный параметр при запросе к nominatim.openstreetmap.
+        # Вы можете использовать любое название вместо test-app/1.0, например просто test-app.
+        headers_nominatim = {"User-Agent": "test-app/1.0"}
 
-        #Указываем параметры: в каком формате возвращать данные и максимальную длину списка стран в ответе.
+        # Указываем параметры: в каком формате возвращать данные и максимальную длину списка стран в ответе.
         params_nominatim = {
-            'country': self.__country,
-            'format': 'json',
-            'limit': 1,
+            "country": self.__country,
+            "format": "json",
+            "limit": 1,
         }
 
         try:
             response = self._connect(self.__openstreetmap_url, params_nominatim, headers_nominatim)
             data = response.json()
             if data:
-                self.__coordinate = [float(x) for x in data[0].get('boundingbox')]
+                self.__coordinate = [float(x) for x in data[0].get("boundingbox")]
                 print(f"Координаты {self.__country} получены.")
         except RequestException as e:
             print(f"Ошибка при получении координат: {e}")
@@ -47,8 +49,10 @@ class APIAdapter(BaseApiAdapter):
             return
 
         params = {
-            'lamin': self.__coordinate[0], 'lamax': self.__coordinate[1],
-            'lomin': self.__coordinate[2], 'lomax': self.__coordinate[3],
+            "lamin": self.__coordinate[0],
+            "lamax": self.__coordinate[1],
+            "lomin": self.__coordinate[2],
+            "lomax": self.__coordinate[3],
         }
 
         try:
@@ -59,11 +63,9 @@ class APIAdapter(BaseApiAdapter):
             print(f"Ошибка при получении данных о самолетах: {e}")
 
     @property
-    def coordinate(self):
+    def coordinate(self) -> Optional[List[float]]:
         return self.__coordinate
 
     @property
-    def aeroplanes(self):
+    def aeroplanes(self) -> Optional[Dict[str, Any]]:
         return self.__aeroplanes
-
-
